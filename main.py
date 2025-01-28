@@ -7,19 +7,20 @@ from langchain_ollama import OllamaEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_ollama.llms import OllamaLLM
 
-template = """
-You are an assistant for question-answering tasks. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use three sentences maximum and keep the answer concise.
-Question: {question} 
-Context: {context} 
-Answer:
-"""
-
 pdfs_directory = 'pdfs/'
+
 
 embeddings = OllamaEmbeddings(model="deepseek-r1:1.5b")
 vector_store = InMemoryVectorStore(embeddings)
 
 model = OllamaLLM(model="deepseek-r1:1.5b")
+
+template = """
+You are an assistant that answers questions. Using the following retrieved information, answer the user question. If you don't know the answer, say that you don't know. Use up to three sentences, keeping the answer concise.
+Question: {question} 
+Context: {context} 
+Answer:
+"""
 
 def upload_pdf(file):
     with open(pdfs_directory + file.name, "wb") as f:
@@ -38,7 +39,7 @@ def split_text(documents):
     )
     return text_splitter.split_documents(documents)
 
-def index_docs(documents):
+def vector_index(documents):
     vector_store.add_documents(documents)
 
 def retrieve_docs(query):
@@ -61,7 +62,7 @@ if uploaded_file:
     upload_pdf(uploaded_file)
     documents = load_pdf(pdfs_directory + uploaded_file.name)
     chunked_documents = split_text(documents)
-    index_docs(chunked_documents)
+    vector_index(chunked_documents)
 
     question = st.chat_input()
 
