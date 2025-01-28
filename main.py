@@ -1,5 +1,3 @@
-import streamlit as st
-
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.vectorstores import InMemoryVectorStore
@@ -57,18 +55,3 @@ uploaded_file = st.file_uploader(
     type="pdf",
     accept_multiple_files=False
 )
-
-if uploaded_file:
-    upload_pdf(uploaded_file)
-    documents = load_pdf(pdfs_directory + uploaded_file.name)
-    chunked_documents = split_text(documents)
-    vector_index(chunked_documents)
-
-    question = st.chat_input()
-
-    if question:
-        st.chat_message("user").write(question)
-        related_documents = retrieve_docs(question)
-        answer = answer_question(question, related_documents)
-        st.chat_message("assistant").write(answer)
-
