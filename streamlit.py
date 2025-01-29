@@ -11,14 +11,12 @@ uploaded_file = st.file_uploader(
 
 if uploaded_file:
     main.upload_pdf(uploaded_file)
-    documents = main.load_pdf(main.pdfs_directory + uploaded_file.name)
-    chunked_documents = main.split_text(documents)
-    main.vector_index(chunked_documents)
-
+    db = main.create_vector_store(main.pdfs_directory + uploaded_file.name)
     question = st.chat_input()
 
     if question:
         st.chat_message("user").write(question)
-        related_documents = main.retrieve_docs(question)
-        answer = main.answer_question(question, related_documents)
+        related_documents = main.retrieve_docs(db, question)
+        answer = main.question_pdf(question, related_documents)
         st.chat_message("assistant").write(answer)
+        st.text(main.retrieve_docs(db=db, query="passing score"))

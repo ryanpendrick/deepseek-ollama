@@ -1,5 +1,6 @@
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain.vectorstores import FAISS
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_ollama import OllamaEmbeddings
 from langchain_core.prompts import ChatPromptTemplate
@@ -9,7 +10,6 @@ pdfs_directory = 'pdfs/'
 
 
 embeddings = OllamaEmbeddings(model="deepseek-r1:1.5b")
-vector_store = InMemoryVectorStore(embeddings)
 
 model = OllamaLLM(model="deepseek-r1:1.5b")
 
@@ -24,34 +24,29 @@ def upload_pdf(file):
     with open(pdfs_directory + file.name, "wb") as f:
         f.write(file.getbuffer())
 
-def load_pdf(file_path):
+def create_vector_store(file_path):
     loader = PyPDFLoader(file_path)
     documents = loader.load()
-    return documents
-
-def split_text(documents):
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size=1000,
-        chunk_overlap=200,
+    
+    text_splitter =RecursiveCharacterTextSplitter(
+        chunk_size=2000,
+        chunk_overlap=300,
         add_start_index=True
     )
-    return text_splitter.split_documents(documents)
 
-def vector_index(documents):
-    vector_store.add_documents(documents)
+    chunked_docs = text_splitter.split_documents(documents)
+    db = FAISS.from_documents(chunked_docs, embeddings)
+    return db
 
-def retrieve_docs(query):
-    return vector_store.similarity_search(query)
 
-def answer_question(question, documents):
+def retrieve_docs(db, query, k=4):
+    print(db.similarity_search(query))
+    return db.similarity_search(query, k)
+
+
+def question_pdf(question, documents):
     context = "\n\n".join([doc.page_content for doc in documents])
     prompt = ChatPromptTemplate.from_template(template)
     chain = prompt | model
 
     return chain.invoke({"question": question, "context": context})
-
-uploaded_file = st.file_uploader(
-    "Upload PDF",
-    type="pdf",
-    accept_multiple_files=False
-)
