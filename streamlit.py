@@ -19,4 +19,5 @@ if uploaded_file:
         related_documents = main.retrieve_docs(db, question)
         answer = main.question_pdf(question, related_documents)
         st.chat_message("assistant").write(answer)
-        st.text(main.retrieve_docs(db=db, query="passing score"))
+        # Test retrieval of docs
+        # st.text(main.retrieve_docs(db=db, query="NVIDIA STOCK"))
